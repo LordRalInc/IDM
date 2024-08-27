@@ -8,3 +8,4 @@ _version.py
 *.svg
 database.json
 pylama.ini
+/.*venv
