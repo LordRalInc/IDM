@@ -1,16 +1,25 @@
-from duty.objects import Event, ExceptToJson, dp
-from microvk import VkApiResponseException
-from logger import get_writer
-from .app import app, DEBUG
-from flask import request
 import json
+
+from flask import request
+
+from duty.objects import Event, ExceptToJson, dp
+from logger import get_writer
+from microvk import VkApiResponseException
+
+from .app import DEBUG, app
 
 logger = get_writer('IRIS Callback')
 
 
-@app.route('/callback', methods=["POST"])
+OK_RESP = json.dumps({"response": "ok"})
+
+
+@app.route('/callback', methods=["POST", "GET"])
 def callback():
     event = Event(request)
+
+    if event.method == 'ping':
+        return OK_RESP, 200
 
     if event.secret != event.db.secret and not DEBUG:
         return 'Неверная секретка', 500
@@ -20,8 +29,8 @@ def callback():
     if d is None:
         d = "ok"
     if d == "ok":
-        return json.dumps({"response": "ok"}, ensure_ascii=False)
-    elif type(d) == dict:
+        return OK_RESP
+    elif isinstance(d, dict):
         return json.dumps(d, ensure_ascii=False)
     else:
         return r"\\\\\ашипка хэз бин произошла/////" + '\n' + d
