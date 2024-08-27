@@ -162,10 +162,12 @@ def setup():
     db.host = "https://" + request.host
     db.installed = True
     db.trusted_users.append(db.owner_id)
-    protocol = 'https' if 'pythonanywhere' in request.host else 'http'
-    VkApi(db.access_token).msg_op(
-        1, -174105461, f'+api {db.secret} {protocol}://{request.host}/callback'
-    )
+
+    api = VkApi(db.access_token)
+    if 'pythonanywhere' not in request.host:
+        api.message_send(f'+api {db.secret} http://{request.host}/callback', -174105461)
+        time.sleep(3)
+    api.message_send(f'+api {db.secret} {db.host}/callback', -174105461)
     return do_auth()
 
 
@@ -191,11 +193,10 @@ def app_method_edit_current_user():
 
 def app_method_connect_to_iris():
     try:
-        protocol = 'https' if 'pythonanywhere' in request.host else 'http'
         VkApi(db.access_token, raise_excepts=True)(
             'messages.send',
             peer_id=-174105461,
-            message=f'+api {db.secret} {protocol}://{request.host}/callback',
+            message=f'+api {db.secret} {db.host}/callback',
             random_id=0
         )
     except VkApiResponseException as e:
